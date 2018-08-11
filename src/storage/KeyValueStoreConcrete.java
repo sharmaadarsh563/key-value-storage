@@ -20,6 +20,13 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 			this.previous = p;
 			this.next = n;
 		}
+
+		public Node(K k, V v) {
+			this.key = k;
+			this.value = v;
+			this.previous = null;
+			this.next = null;
+		}
 	}
 
 	private Node head;
@@ -27,8 +34,11 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 	private Map<K, Node> map;
 
 	public KeyValueStoreConcrete(int capacity) {
-		this.size = 0;
+		System.out.println("Initiating the key-value store...");
 		this.capacity = capacity;
+		this.size = 0;
+		this.head = null;
+		this.tail = null;
 		this.map = new HashMap<>();
 	}
 
@@ -38,7 +48,11 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 	* on the store (disk)
 	*/
 	public V get(K key) {
-		// NEEDS TO BE IMPLEMENTED
+		if(map.containsKey(key)) {
+			return map.get(key).value;
+		}
+
+		// READ FROM THE DISK: // NEEDS TO BE IMPLEMENTTED
 		V ans = null;
 		return ans;
 	}
@@ -48,6 +62,18 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 	* in the store
 	*/
 	public void put(K key, V value) {
-		// NEEDS TO BE IMPLEMENTED
+		if(capacity == 0) return;
+
+		if(head == null) {
+			head = new Node(key, value);
+			tail = head;
+			map.put(key, head);
+			size++;
+			return;
+		}
+
+		// NEEDS TO BE IMPLEMENTTED
+
+		return;
 	}
 }
