@@ -35,7 +35,12 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 
 	public KeyValueStoreConcrete(int capacity) {
 		System.out.println("Initiating the key-value store...");
-		this.capacity = capacity;
+		if(capacity > 0) {
+			this.capacity = capacity;
+		}
+		else {
+			this.capacity = 0;
+		}
 		this.size = 0;
 		this.head = null;
 		this.tail = null;
@@ -62,7 +67,12 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 	* in the store
 	*/
 	public void put(K key, V value) {
-		if(capacity == 0) return;
+		if(capacity == 0) {
+			// memory based key-value store should be initialized with
+			// a valid capacity in memory
+			System.out.println("Please specify capacity for the key-value store");
+			return;
+		}
 
 		if(head == null) {
 			head = new Node(key, value);
@@ -72,7 +82,40 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 			return;
 		}
 
-		// NEEDS TO BE IMPLEMENTTED
+		if(map.containsKey(key)){
+			if(map.get(key).previous == null) {
+				map.get(key).value = value;
+			}
+			else {
+				map.get(key).previous.next = map.get(key).next;
+				if(map.get(key).next != null) {
+					map.get(key).next.previous = map.get(key).previous;
+				}
+
+				map.get(key).next = head;
+				head.previous = map.get(key);
+				map.get(key).previous = null;
+				head = map.get(key);
+				head.value = value;
+				map.put(key, head);
+			}
+		}
+		else {
+			if(size < capacity) size++;
+			else {
+				Node temp = tail;
+				tail = tail.previous;
+				if(tail != null) tail.next = null;
+				map.remove(temp.key);
+				// MOVE THE TAIL TO THE DISK: NEEDS TO BE IMPLEMENTED
+			}
+
+			Node node = new Node(key, value);
+			node.next = head;
+			head.previous = node;
+			head = node;
+			map.put(key, head);
+		}
 
 		return;
 	}
