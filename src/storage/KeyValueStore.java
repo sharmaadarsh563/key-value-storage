@@ -4,7 +4,7 @@ package storage;
 /**
  * The interface to KeyValueStore, which will be implentated
  * by other concrete classes based on the choice of the algorithm
- * andthe underlying data-structures
+ * and the underlying data-structures
  */
 
 public interface KeyValueStore<K,V> {

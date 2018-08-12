@@ -3,35 +3,24 @@ package storage;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * Concrete class, implementing the KeyValueStore interface
+ * This class maintains most-recently used elements in memory
+ * and writes least-recently used elements back to disk in CSV
+ * format
+*/
+
 public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 
+	private static final int DEFAULT_MEMORY_SIZE = 1000;
+	private static final String FILEPATH = "./db.csv";
 	private int capacity;
 	private int size;
-
-	class Node {
-		K key;
-		V value;
-		Node previous;
-		Node next;
-
-		public Node(Node p, Node n, K k, V v) {
-			this.key = k;
-			this.value = v;
-			this.previous = p;
-			this.next = n;
-		}
-
-		public Node(K k, V v) {
-			this.key = k;
-			this.value = v;
-			this.previous = null;
-			this.next = null;
-		}
-	}
-
 	private Node head;
 	private Node tail;
-	private Map<K, Node> map;
+	private Map<K, Node<K,V> > map;
+	private FileHandler f;
 
 	public KeyValueStoreConcrete(int capacity) {
 		System.out.println("Initiating the key-value store...");
@@ -39,12 +28,14 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 			this.capacity = capacity;
 		}
 		else {
-			this.capacity = 0;
+			System.out.println("Invalid capacity provided, so using default value");
+			this.capacity = DEFAULT_MEMORY_SIZE;
 		}
 		this.size = 0;
 		this.head = null;
 		this.tail = null;
 		this.map = new HashMap<>();
+		this.f = new CSVFileHandler();
 	}
 
 	/**
@@ -57,9 +48,8 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 			return map.get(key).value;
 		}
 
-		// READ FROM THE DISK: // NEEDS TO BE IMPLEMENTTED
-		V ans = null;
-		return ans;
+		String ans = f.read(FILEPATH, key);
+		return (V) ans;
 	}
 
 	/**
@@ -75,7 +65,7 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 		}
 
 		if(head == null) {
-			head = new Node(key, value);
+			head = new Node<K,V>(key, value);
 			tail = head;
 			map.put(key, head);
 			size++;
@@ -107,10 +97,13 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 				tail = tail.previous;
 				if(tail != null) tail.next = null;
 				map.remove(temp.key);
-				// MOVE THE TAIL TO THE DISK: NEEDS TO BE IMPLEMENTED
+
+				// move the least recently used data to
+				// the disk
+				f.write(FILEPATH, temp);
 			}
 
-			Node node = new Node(key, value);
+			Node node = new Node<K,V>(key, value);
 			node.next = head;
 			head.previous = node;
 			head = node;
