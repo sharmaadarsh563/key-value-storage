@@ -11,18 +11,19 @@ import java.util.Map;
  * format
 */
 
-public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
+public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 
 	private static final int DEFAULT_MEMORY_SIZE = 1000;
 	private static final String FILEPATH = "./db.csv";
+	private static KeyValueStoreConcrete uniqueInstance;
 	private int capacity;
 	private int size;
-	private Node head;
-	private Node tail;
-	private Map<K, Node<K,V> > map;
-	private FileHandler f;
+	private Node<Integer,String> head;
+	private Node<Integer,String> tail;
+	private Map<Integer, Node<Integer,String> > map;
+	private FileHandler<Integer> f;
 
-	public KeyValueStoreConcrete(int capacity) {
+	private KeyValueStoreConcrete(int capacity) {
 		if(capacity > 0) {
 			this.capacity = capacity;
 		}
@@ -38,24 +39,36 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 	}
 
 	/**
+	* Method to get the same instance,
+	* restricting the initiation of multiple
+	* instances of the same class
+	*/
+	public static synchronized KeyValueStoreConcrete getInstance(int capacity) {
+		if (uniqueInstance == null) {
+			uniqueInstance = new KeyValueStoreConcrete(capacity);
+		}
+		return uniqueInstance;
+	}
+
+	/**
 	* Method to get the key/value pair
 	* from the memory with a fallback
 	* on the store (disk)
 	*/
-	public V get(K key) {
+	public String get(Integer key) {
 		if(map.containsKey(key)) {
 			return map.get(key).value;
 		}
 
 		String ans = f.read(FILEPATH, key);
-		return (V) ans;
+		return ans;
 	}
 
 	/**
 	* Method to add or update the key/value pair
 	* in the store
 	*/
-	public void put(K key, V value) {
+	public void put(Integer key, String value) {
 		if(capacity == 0) {
 			// memory based key-value store should be initialized with
 			// a valid capacity in memory
@@ -64,7 +77,7 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 		}
 
 		if(head == null) {
-			head = new Node<K,V>(key, value);
+			head = new Node<Integer,String>(key, value);
 			tail = head;
 			map.put(key, head);
 			size++;
@@ -92,7 +105,7 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 		else {
 			if(size < capacity) size++;
 			else {
-				Node temp = tail;
+				Node<Integer,String> temp = tail;
 				tail = tail.previous;
 				if(tail != null) tail.next = null;
 				map.remove(temp.key);
@@ -102,7 +115,7 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 				f.write(FILEPATH, temp);
 			}
 
-			Node node = new Node<K,V>(key, value);
+			Node<Integer,String> node = new Node<Integer,String>(key, value);
 			node.next = head;
 			head.previous = node;
 			head = node;

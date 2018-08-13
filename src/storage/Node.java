@@ -9,10 +9,10 @@ package storage;
 public class Node<K,V> {
 	K key;
 	V value;
-	Node previous;
-	Node next;
+	Node<K,V> previous;
+	Node<K,V> next;
 
-	public Node(Node p, Node n, K k, V v) {
+	public Node(Node<K,V> p, Node<K,V> n, K k, V v) {
 		this.key = k;
 		this.value = v;
 		this.previous = p;

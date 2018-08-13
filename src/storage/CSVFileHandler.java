@@ -19,7 +19,7 @@ import java.io.IOException;
  *       it to the file.
 */
 
-public class CSVFileHandler<K> implements FileHandler<K> {
+public class CSVFileHandler implements FileHandler<Integer> {
 
 	public CSVFileHandler() {}
 
@@ -41,7 +41,7 @@ public class CSVFileHandler<K> implements FileHandler<K> {
 
 	}
 
-	public String read(String filePath, K key) {
+	public String read(String filePath, Integer key) {
 		System.out.println("Reading the file...");
 
 		File file = new File(filePath);

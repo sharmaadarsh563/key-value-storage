@@ -16,7 +16,7 @@ public class Client {
 
 			int cp = Integer.parseInt(reader.readLine());
 
-			KeyValueStore store = new KeyValueStoreConcrete<Integer, String>(cp);
+			KeyValueStore<Integer,String> store = KeyValueStoreConcrete.getInstance(cp);
 
 			System.out.println("Please provide valid operators: get, put, or quit");
 
@@ -26,7 +26,7 @@ public class Client {
 					store.put(Integer.parseInt(lineArr[1]), lineArr[2]);
 				}
 				else if(lineArr[0].equals("get")) {
-					System.out.println(store.get(Integer.parseInt(lineArr[1])));
+					System.out.println("value =>" + store.get(Integer.parseInt(lineArr[1])));
 				}
 				else if(lineArr[0].equals("quit")) {
 					System.out.println("Quiting...");
