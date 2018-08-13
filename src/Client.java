@@ -5,31 +5,40 @@ import java.io.InputStreamReader;
 
 import storage.*;
 
-public class KeyValueStoreTest {
+public class Client {
 
 	public static void main(String args[]) throws IOException{
 		System.out.println("Initiating the templates...");
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		try {
-			System.out.println("Enter the capacity of the key-value store:");
+			System.out.println("Enter the capacity of the key-value store: ");
 
 			int cp = Integer.parseInt(reader.readLine());
 
 			KeyValueStore store = new KeyValueStoreConcrete<Integer, String>(cp);
-			store.put(1, "adarsh");
-			store.put(2, "arpit");
-			store.put(3, "uddeshya");
-			store.put(4, "blahblah");
-			store.put(5, "asjdhasjdhs");
-			System.out.println("\n"+store.get(5));
-			System.out.println("\n"+store.get(4));
-			System.out.println("\n"+store.get(3));
-			System.out.println("\n"+store.get(2));
-			System.out.println("\n"+store.get(1));
+
+			System.out.println("Please provide valid operators: get, put, or quit");
+
+			while(true) {
+				String[] lineArr = reader.readLine().split(" ");
+				if(lineArr[0].equals("put")) {
+					store.put(Integer.parseInt(lineArr[1]), lineArr[2]);
+				}
+				else if(lineArr[0].equals("get")) {
+					System.out.println(store.get(Integer.parseInt(lineArr[1])));
+				}
+				else if(lineArr[0].equals("quit")) {
+					System.out.println("Quiting...");
+					break;
+				}
+				else {
+					System.out.println("Invalid operator provided");
+					break;
+				}
+			}
 		}
 		catch (NumberFormatException e) {
-			System.out.println("\nExiting...");
 			System.out.println("Error: " + e);
 		}
 		catch (Exception e) {

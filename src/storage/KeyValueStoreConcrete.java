@@ -23,7 +23,6 @@ public class KeyValueStoreConcrete<K,V> implements KeyValueStore<K,V> {
 	private FileHandler f;
 
 	public KeyValueStoreConcrete(int capacity) {
-		System.out.println("Initiating the key-value store...");
 		if(capacity > 0) {
 			this.capacity = capacity;
 		}

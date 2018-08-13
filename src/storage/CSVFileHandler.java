@@ -66,6 +66,6 @@ public class CSVFileHandler<K> implements FileHandler<K> {
 			e.printStackTrace();
 		}
 
-		return "";
+		return "Value does not exist";
 	}
 }
