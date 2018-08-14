@@ -14,7 +14,7 @@ import java.util.Map;
 public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 
 	private static final int DEFAULT_MEMORY_SIZE = 1000;
-	private static final String FILEPATH = "./db.csv";
+	private static final int DEFAULT_FILE_SIZE = 10000;
 	private static KeyValueStoreConcrete uniqueInstance;
 	private int capacity;
 	private int size;
@@ -60,7 +60,8 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 			return map.get(key).value;
 		}
 
-		String ans = f.read(FILEPATH, key);
+		String shard = String.valueOf(key%DEFAULT_FILE_SIZE);
+		String ans = f.read("./db/" + shard + ".csv", key);
 		return ans;
 	}
 
@@ -95,8 +96,8 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 				}
 
 				map.get(key).next = head;
-				head.previous = map.get(key);
 				map.get(key).previous = null;
+				head.previous = map.get(key);
 				head = map.get(key);
 				head.value = value;
 				map.put(key, head);
@@ -112,7 +113,8 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 
 				// move the least recently used data to
 				// the disk
-				f.write(FILEPATH, temp);
+				String shard = String.valueOf(temp.key%DEFAULT_FILE_SIZE);
+				f.write("./db/" + shard + ".csv", temp);
 			}
 
 			Node<Integer,String> node = new Node<Integer,String>(key, value);
@@ -120,6 +122,9 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 			head.previous = node;
 			head = node;
 			map.put(key, head);
+			if(tail == null) {
+				tail = head;
+			}
 		}
 
 		return;

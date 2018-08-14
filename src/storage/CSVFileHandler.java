@@ -42,9 +42,16 @@ public class CSVFileHandler implements FileHandler<Integer> {
 	}
 
 	public String read(String filePath, Integer key) {
+		File file = new File(filePath);
+
+		String result = "Value does not exist";
+
+		if (!file.exists()) {
+			return result;
+		}
+
 		System.out.println("Reading the file...");
 
-		File file = new File(filePath);
 		try {
 
 			FileReader ifile = new FileReader(file);
@@ -55,8 +62,7 @@ public class CSVFileHandler implements FileHandler<Integer> {
 			while ((currLine = in.readLine()) != null) {
 				String[] currLineArray = currLine.split(":");
 				if(currLineArray[0].equals(key.toString())) {
-					in.close();
-					return currLineArray[1];
+					result = currLineArray[1];
 				}
 			}
 
@@ -66,6 +72,6 @@ public class CSVFileHandler implements FileHandler<Integer> {
 			e.printStackTrace();
 		}
 
-		return "Value does not exist";
+		return result;
 	}
 }
