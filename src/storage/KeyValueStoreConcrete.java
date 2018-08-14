@@ -20,7 +20,7 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 	private int size;
 	private Node<Integer,String> head;
 	private Node<Integer,String> tail;
-	private Map<Integer, Node<Integer,String> > map;
+	private Map<Integer,Node<Integer,String> > map;
 	private FileHandler<Integer> f;
 
 	private KeyValueStoreConcrete(int capacity) {
