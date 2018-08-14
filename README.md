@@ -2,19 +2,25 @@
 
 This is the in-memory disk-backed key-value storage. If the memory gets full, the least recently used data is moved to the disk, making it available to perform the read operation. The data on disk is arranged in a file-based system, sharding the file using a hash function, and keeping the size of each file as small as possible so as to optimize read/write operation. To further improve the performance, the buffering (of default size) has also been introduced while reading/writing.
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-### Prerequisites
-
-What things you need to install the software and how to install them
-
+## Assumptions
+* Our disk is mechanical hard drive
+* Access pattern consists of significant number of read operations. Read operation consists of the following steps:
 ```
-Give examples
+Step 1: A read from the HashMap corresponding to a key,
+Step 2: An update in the Doubly LinkedList, making value as most recently used
 ```
 
-### Installing
+## Design Choices
+
+### Data Structures
+* Doubly linked-list, tracking the most and least recently used key-value pair
+* HashMap, returning the value corresponding to a key with O(1) complexity
+* Queue, to improve the performance of read operation by delaying the Operation 2
+
+### Design Patterns
+* Singleton pattern, restricting the instantiation of key-value storage class
+
+### Run the program
 
 A step by step series of examples that tell you how to get a development env running
 
@@ -52,36 +58,16 @@ Explain what these tests test and why
 Give an example
 ```
 
-## Deployment
+## Future Improvements
 
-Add additional notes about how to deploy this on a live system
+### Existing implementation
+* Like the read operation, breakdown the write operation in multiple steps and prioritize them to improve the performance.
+* Run the separate thread for Queue handling and Files' clean-up.
 
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+### New implementation
+* Instead of a Doubly linked-list, HashMap, and Queue, maintain a Binary Search Tree (BST) in memory and write it out as SSTables on disk when the size of BST exceeds a threshold. Note that the keys would be written in an sorted order in SSTables.
+* Run a background thread to perform merging and compaction on SSTables.
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* **Adarsh Sharma**

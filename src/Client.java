@@ -26,7 +26,7 @@ public class Client {
 					store.put(Integer.parseInt(lineArr[1]), lineArr[2]);
 				}
 				else if(lineArr[0].equals("get")) {
-					System.out.println("value =>" + store.get(Integer.parseInt(lineArr[1])));
+					System.out.println("value => " + store.get(Integer.parseInt(lineArr[1])));
 				}
 				else if(lineArr[0].equals("quit")) {
 					System.out.println("Quiting...");
@@ -38,9 +38,6 @@ public class Client {
 				}
 			}
 		}
-		catch (NumberFormatException e) {
-			System.out.println("Error: " + e);
-		}
 		catch (Exception e) {
 			System.out.println("Error: " + e);
 		}
@@ -48,6 +45,10 @@ public class Client {
 			if (reader != null) {
 				reader = null;
 			}
+
+			// shutdown the key-value store
+			System.out.println("Stopping all threads...");
+			KeyValueStoreConcrete.shutDown();
 		}
 	}
 }

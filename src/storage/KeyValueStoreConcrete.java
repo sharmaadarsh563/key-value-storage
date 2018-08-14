@@ -5,10 +5,15 @@ import java.util.Map;
 
 
 /**
- * Concrete class, implementing the KeyValueStore interface
+ * Concrete class, implementing the KeyValueStore interface,
+ * storing the key-value pair of date-type Integer and String.
  * This class maintains most-recently used elements in memory
- * and writes least-recently used elements back to disk in CSV
- * format
+ * and writes least-recently used elements back to the disk in CSV
+ * format. Write happens in a traditional append-only mechanism,
+ * where key-value pair gets appended to end of the file - this might
+ * create duplicate keys to be present in the file. To avert this, a
+ * background thread is run which cleans up the files periodically without
+ * affecting the read/write operation.
 */
 
 public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
@@ -16,6 +21,7 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 	private static final int DEFAULT_MEMORY_SIZE = 1000;
 	private static final int DEFAULT_FILE_SIZE = 10000;
 	private static KeyValueStoreConcrete uniqueInstance;
+	private static DaemonThread dt;
 	private int capacity;
 	private int size;
 	private Node<Integer,String> head;
@@ -36,10 +42,15 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 		this.tail = null;
 		this.map = new HashMap<>();
 		this.f = new CSVFileHandler();
+
+		// start the thread in the background, which would
+		// clean-up the files
+		dt = new DaemonThread("CleanUpFilesThread", f);
+		dt.start();
 	}
 
 	/**
-	* Method to get the same instance,
+	* Thread-safe static method to get the same instance,
 	* restricting the initiation of multiple
 	* instances of the same class
 	*/
@@ -50,18 +61,38 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 		return uniqueInstance;
 	}
 
+	public static void shutDown() {
+		dt.stop();
+		System.out.println("Shutting down...");
+	}
+
 	/**
 	* Method to get the key/value pair
 	* from the memory with a fallback
 	* on the store (disk)
 	*/
 	public String get(Integer key) {
+		String ans = "";
+
+		// For a memory (cache) hit, get the value
+		// in O(1) complexity
 		if(map.containsKey(key)) {
-			return map.get(key).value;
+			ans = map.get(key).value;
+		}
+		// For a memory (cache) miss, load the value from file
+		// or the disk
+		else {
+			// figure out the filename based on the shard index
+			String shardIndex = String.valueOf(key%DEFAULT_FILE_SIZE);
+
+			// load the value from file
+			ans = f.read("./db/" + shardIndex + ".csv", key);
 		}
 
-		String shard = String.valueOf(key%DEFAULT_FILE_SIZE);
-		String ans = f.read("./db/" + shard + ".csv", key);
+		// make it available in memory as most recently used
+		// key-value pair
+		put(key, ans);
+
 		return ans;
 	}
 
@@ -70,13 +101,15 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 	* in the store
 	*/
 	public void put(Integer key, String value) {
+		// memory based key-value store should be initialized with
+		// a valid capacity in memory
 		if(capacity == 0) {
-			// memory based key-value store should be initialized with
-			// a valid capacity in memory
 			System.out.println("Please specify capacity for the key-value store");
 			return;
 		}
 
+		// if doubly linked-list is empty then create a node and make an
+		// entry into the Map too
 		if(head == null) {
 			head = new Node<Integer,String>(key, value);
 			tail = head;
@@ -85,10 +118,15 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 			return;
 		}
 
+		// if key exist in the Map, then return it, while making it
+		// most recently used key-value pair
 		if(map.containsKey(key)){
+			// if key if already most recently used, then do nothing
 			if(map.get(key).previous == null) {
 				map.get(key).value = value;
 			}
+			// else, move it to the head of the doubly linked-list,
+			// making it the most recently used key-value pair
 			else {
 				map.get(key).previous.next = map.get(key).next;
 				if(map.get(key).next != null) {
@@ -103,20 +141,25 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 				map.put(key, head);
 			}
 		}
+		// if key doesn't exist in the Map, then add it
 		else {
+			// if memory isn't full, then make room for this key
 			if(size < capacity) size++;
+			// else move the least recently used key-value pair back to
+			// disk
 			else {
 				Node<Integer,String> temp = tail;
 				tail = tail.previous;
 				if(tail != null) tail.next = null;
 				map.remove(temp.key);
 
-				// move the least recently used data to
+				// move the least recently used key-value pair to
 				// the disk
 				String shard = String.valueOf(temp.key%DEFAULT_FILE_SIZE);
 				f.write("./db/" + shard + ".csv", temp);
 			}
 
+			// and make this key as most recently used
 			Node<Integer,String> node = new Node<Integer,String>(key, value);
 			node.next = head;
 			head.previous = node;
