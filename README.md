@@ -1,6 +1,6 @@
 # Key-Value Store
 
-This is the in-memory disk-backed key-value storage. If the memory gets full, the least recently used data is moved to the disk, making it available to perform the read operation. The data on disk is arranged in a file-based system, sharding the file using a hash function, and keeping the size of each file as small as possible so as to optimize read/write operation. To further improve the performance, the buffering (of default size) has also been introduced while reading/writing.
+This is the in-memory disk-backed key-value storage. If the memory gets full, the least recently used data is moved to the disk (using append-only mechanism), making it available to perform the read operation. The data on disk is arranged in a file-based system, sharding the file using a hash function, and keeping the size of each file as small as possible so as to optimize read/write operation. To further improve the performance, the sychnronized buffering (of default size) has also been introduced while reading/writing. In addtion, since data is appended to file, duplicate keys might exist in the file; therefore, a background daemon thread runs periodically to clean-up those files.
 
 ## Assumptions
 * Our disk is mechanical hard drive
@@ -15,48 +15,35 @@ Step 2: An update in the Doubly LinkedList, making value as most recently used
 ### Data Structures
 * Doubly linked-list, tracking the most and least recently used key-value pair
 * HashMap, returning the value corresponding to a key with O(1) complexity
-* Queue, to improve the performance of read operation by delaying the Operation 2
+* Queue, to improve the performance of read operation by delaying the Step 2
 
 ### Design Patterns
 * Singleton pattern, restricting the instantiation of key-value storage class
 
 ### Run the program
 
-A step by step series of examples that tell you how to get a development env running
+Please follow the below steps to correctly run this program
 
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
+Step 1: Clone the repository
 
 ```
-until finished
+git clone https://github.com/sharmaadarsh563/key-value-storage.git
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
+Step 2: Change permission to run.sh
 
 ```
-Give an example
+chmod +x run.sh
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
+Step 3: Run the program
 
 ```
-Give an example
+cd src/ && ./run.sh
 ```
+
+Then follow the instructions
+
 
 ## Future Improvements
 
