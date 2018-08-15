@@ -1,7 +1,9 @@
 package storage;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 
 /**
@@ -22,11 +24,12 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 	private static final int DEFAULT_FILE_SIZE = 10000;
 	private static KeyValueStoreConcrete uniqueInstance;
 	private static DaemonThread dt;
+	private static Queue< Node<Integer,String> > queue;
 	private int capacity;
 	private int size;
 	private Node<Integer,String> head;
 	private Node<Integer,String> tail;
-	private Map<Integer,Node<Integer,String> > map;
+	private Map< Integer,Node<Integer,String> > map;
 	private FileHandler<Integer> f;
 
 	private KeyValueStoreConcrete(int capacity) {
@@ -37,15 +40,16 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 			System.out.println("Invalid capacity provided, so using default value");
 			this.capacity = DEFAULT_MEMORY_SIZE;
 		}
-		this.size = 0;
-		this.head = null;
-		this.tail = null;
-		this.map = new HashMap<>();
-		this.f = new CSVFileHandler();
+		size = 0;
+		head = null;
+		tail = null;
+		map = new HashMap<>();
+		queue = new LinkedList<>();
+		f = new CSVFileHandler();
 
 		// start the thread in the background, which would
 		// clean-up the files
-		dt = new DaemonThread("CleanUpFilesThread", f);
+		dt = new DaemonThread("CleanUpFilesThread", f, this);
 		dt.start();
 	}
 
@@ -61,9 +65,33 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 		return uniqueInstance;
 	}
 
+	/**
+	* Shutdown this instance by stopping the threads
+	*/
 	public static void shutDown() {
 		dt.stop();
 		System.out.println("Shutting down...");
+	}
+
+	/**
+	* Get the queue size
+	*/
+	public static int getQueueSize() {
+		return queue.size();
+	}
+
+	/**
+	* remove element from queue
+	*/
+	public static Node<Integer,String> removeQueueElement() {
+		return queue.remove();
+	}
+
+	/**
+	* add element to the queue
+	*/
+	public static void addQueueElement(Node<Integer,String> node) {
+		queue.add(node);
 	}
 
 	/**
@@ -89,9 +117,11 @@ public class KeyValueStoreConcrete implements KeyValueStore<Integer,String> {
 			ans = f.read("./db/" + shardIndex + ".csv", key);
 		}
 
-		// make it available in memory as most recently used
-		// key-value pair
-		put(key, ans);
+		// push this pair into queue, the background daemon thread
+		// will make it most recently used element
+		// This is being done to improve the performance of read
+		// operation
+		queue.add(new Node<Integer,String>(key, ans));
 
 		return ans;
 	}
